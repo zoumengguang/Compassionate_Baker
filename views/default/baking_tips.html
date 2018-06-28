@@ -1,0 +1,411 @@
+{{extend 'layout.html'}}
+
+{{block head}}
+
+<script src="{{=URL('static', 'js/vue.js')}}"></script>
+<script>
+  // Define your URLs here.
+  //var check_dupe_url = "{{=URL('api_add_ingr', 'check_duplicate')}}";
+</script>
+
+
+{{end}}
+
+<div class="main_content">
+
+  <div id="vue-div" class="display:none">
+    <!-- Your code goes here.  Remember to call $("#vue-div").show() once you get the data for the first time. -->
+    
+    <div class="container padded">
+      <p style="font-size: 3em;text-align:center;">Baking Tips</p>
+
+        <div class="third">
+            <h2>Unit Conversion</h2>
+            <div class="white padded rounded">
+            <p style="margin-left:8px; margin-bottom:4px;">
+                Put your measurement into the fields to convert them:
+            </p>
+            <!-- tab links -->
+            <div class="tab">
+                <button class="tablinks" onclick="tog_conv(event, 'Volume')">Volume</button>
+                <button class="tablinks" onclick="tog_conv(event, 'Weight')">Weight</button>
+                <button class="tablinks" onclick="tog_conv(event, 'Temperature')">Temperature</button>
+            </div>
+
+            <!-- tab volume content -->
+            <div id="Volume" class="tabcontent">
+                <div class="half">
+                    <label>ml</label>
+                    <input id="input_ml" type="number" placeholder="ml" step=".01"
+                        oninput="lengthConverter(this.id,this.value)" onchange="lengthConverter(this.id,this.value)">
+                </div>
+                <div class="half">
+                    <label>Pint (dry)</label>
+                    <input id="input_pint_dry" type="number" placeholder="dry pint" step=".01"
+                           oninput="lengthConverter(this.id,this.value)" onchange="lengthConverter(this.id,this.value)">
+                </div>
+                <div class="half">
+                    <label>Pint (liquid)</label>
+                    <input id="input_pint_liq" type="number" placeholder="liquid pint" step=".01"
+                         oninput="lengthConverter(this.id,this.value)" onchange="lengthConverter(this.id,this.value)">
+                </div>
+                    <div class="half">
+                    <label>Cup</label>
+                    <input id="input_cup" type="number" placeholder="Cups" step=".01"
+                          oninput="lengthConverter(this.id,this.value)" onchange="lengthConverter(this.id,this.value)">
+                </div>
+                <div class="half">
+                    <label>Fluid Oz.</label>
+                    <input id="input_fl_oz" type="number" placeholder="fl oz." step=".01"
+                           oninput="lengthConverter(this.id,this.value)" onchange="lengthConverter(this.id,this.value)">
+                </div>
+                <div class="half">
+                    <label>Tbsp</label>
+                    <input id="input_Tbsp" type="number" placeholder="Tbsps" step=".01"
+                           oninput="lengthConverter(this.id,this.value)" onchange="lengthConverter(this.id,this.value)">
+                </div>
+                <div class="half">
+                    <label>Tsp</label>
+                    <input id="input_Tsp" type="number" placeholder="Tsps" step=".01"
+                           oninput="lengthConverter(this.id,this.value)" onchange="lengthConverter(this.id,this.value)">
+                </div>
+            </div>
+
+            <!-- tab weight content -->
+            <div id="Weight" class="tabcontent">
+                <div class="half">
+                    <label>Gram</label>
+                    <input id="input_g" type="number" placeholder="g" step=".01"
+                        oninput="lengthConverter(this.id,this.value)" onchange="lengthConverter(this.id,this.value)">
+                </div>
+                <div class="half">
+                    <label>Kilogram</label>
+                    <input id="input_kg" type="number" placeholder="kg" step=".01"
+                           oninput="lengthConverter(this.id,this.value)" onchange="lengthConverter(this.id,this.value)">
+                </div>
+                <div class="half">
+                    <label>Milligram</label>
+                    <input id="input_mg" type="number" placeholder="mg" step=".01"
+                         oninput="lengthConverter(this.id,this.value)" onchange="lengthConverter(this.id,this.value)">
+                </div>
+                    <div class="half">
+                    <label>Pound</label>
+                    <input id="input_lb" type="number" placeholder="lb" step=".01"
+                          oninput="lengthConverter(this.id,this.value)" onchange="lengthConverter(this.id,this.value)">
+                </div>
+                <div class="half">
+                    <label>Ounce</label>
+                    <input id="input_oz" type="number" placeholder="oz" step=".01"
+                           oninput="lengthConverter(this.id,this.value)" onchange="lengthConverter(this.id,this.value)">
+                </div>
+            </div>
+
+            <!-- tab temperature content -->
+                <div id="Temperature" class="tabcontent">
+                    <div class="half">
+                        <label>Celsius</label>
+                        <input id="input_celsius" type="number" placeholder="C" step=".01"
+                            oninput="lengthConverter(this.id,this.value)" onchange="lengthConverter(this.id,this.value)">
+                    </div>
+                    <div class="half">
+                        <label>Fahrenheit</label>
+                        <input id="input_fahrenheit" type="number" placeholder="F" step=".01"
+                            oninput="lengthConverter(this.id,this.value)" onchange="lengthConverter(this.id,this.value)">
+                    </div>
+                </div>
+
+            <script>
+                var h, m, s, current, countdown_timer;
+                function lengthConverter(source, valNum)
+                {
+                    valNum = parseFloat(valNum);
+                    var input_ml = document.getElementById("input_ml");
+                    var input_pint_dry = document.getElementById("input_pint_dry");
+                    var input_pint_liq = document.getElementById("input_pint_liq");
+                    var input_cup = document.getElementById("input_cup");
+                    var input_fl_oz = document.getElementById("input_fl_oz");
+                    var input_Tbsp = document.getElementById("input_Tbsp");
+                    var input_Tsp = document.getElementById("input_Tsp");
+                    var input_g = document.getElementById("input_g");
+                    var input_kg = document.getElementById("input_kg");
+                    var input_mg = document.getElementById("input_mg");
+                    var input_lb = document.getElementById("input_lb");
+                    var input_oz = document.getElementById("input_oz");
+                    var input_celsius = document.getElementById("input_celsius");
+                    var input_fahrenheit = document.getElementById("input_fahrenheit");
+                    if (source=="input_ml"){
+                        input_pint_dry.value = (valNum*1.82e-3).toFixed(2);
+                        input_pint_liq.value = (valNum*2.11e-3).toFixed(2);
+                        input_cup.value = (valNum*4.23e-3).toFixed(2);
+                        input_fl_oz.value = (valNum*0.0352).toFixed(2);
+                        input_Tbsp.value = (valNum*0.068).toFixed(1);
+                        input_Tsp.value = (valNum*0.203).toFixed();
+                    }
+                    if (source=="input_pint_dry"){
+                        input_ml.value = (valNum*550.61).toFixed(2);
+                        input_pint_liq.value = (valNum*1.16).toFixed(2);
+                        input_cup.value = (valNum*2.327).toFixed(2);
+                        input_fl_oz.value = (valNum*19.379).toFixed(2);
+                        input_Tbsp.value = (valNum*36.707).toFixed(1);
+                        input_Tsp.value = (valNum*110.122).toFixed();
+                    }
+                    if (source=="input_pint_liq"){
+                        input_ml.value = (valNum*1.25).toFixed(2);
+                        input_pint_dry.value = (valNum*0.86).toFixed(2);
+                        input_cup.value = (valNum*0.00525).toFixed(2);
+                        input_fl_oz.value = (valNum*0.04225).toFixed(2);
+                        input_Tbsp.value = (valNum*0.0845).toFixed(1);
+                        input_Tsp.value = (valNum*0.25).toFixed()
+                    }
+                    if (source=="input_cup"){
+                        input_ml.value = (valNum*236.588).toFixed(2);
+                        input_pint_dry.value = (valNum*0.43).toFixed(2);
+                        input_pint_liq.value = (valNum*0.5).toFixed(2);
+                        input_fl_oz.value = (valNum*8.327).toFixed(2);
+                        input_Tbsp.value = (valNum*15.773).toFixed(1);
+                        input_Tsp.value = (valNum*47.318).toFixed();
+                    }
+                    if (source=="input_fl_oz"){
+                        input_ml.value = (valNum*29.574).toFixed(2);
+                        input_pint_dry.value = (valNum*0.05).toFixed(2);
+                        input_pint_liq.value = (valNum*0.06).toFixed(2);
+                        input_cup.value = (valNum*0.125).toFixed(2);
+                        input_Tbsp.value = (valNum*1.972).toFixed(1);
+                        input_Tsp.value = (valNum*5.915).toFixed();
+                    }
+                    if (source=="input_Tbsp"){
+                        input_ml.value = (valNum*15).toFixed(2);
+                        input_pint_dry.value = (valNum*0.027).toFixed(2);
+                        input_pint_liq.value = (valNum*0.031).toFixed(2);
+                        input_cup.value = (valNum*0.063).toFixed(2);
+                        input_fl_oz.value = (valNum*0.528).toFixed(1);
+                        input_Tsp.value = (valNum*3).toFixed();
+                    }
+                    if (source=="input_Tsp"){
+                        input_ml.value = (valNum*5).toFixed(2);
+                        input_pint_dry.value = (valNum*0.009).toFixed(2);
+                        input_pint_liq.value = (valNum*0.01)
+                        input_cup.value = (valNum*0.021).toFixed(2);
+                        input_fl_oz.value = (valNum*0.169).toFixed(2);
+                        input_Tbsp.value = (valNum*0.338).toFixed(1);
+                    }
+                    if (source=="input_g") {
+                        input_kg.value = (valNum*0.001).toFixed(2);
+                        input_mg.value = (valNum*1000).toFixed();
+                        input_lb.value = (valNum*0.002).toFixed(2);
+                        input_oz.value = (valNum*0.035).toFixed(2);
+                    }
+                    if (source=="input_kg") {
+                        input_g.value = (valNum*1000).toFixed();
+                        input_mg.value = (valNum*1e6).toFixed();
+                        input_lb.value = (valNum*2.205).toFixed(2);
+                        input_oz.value = (valNum*35.274).toFixed(2);
+                    }
+                    if (source=="input_mg") {
+                        input_g.value = (valNum*0.001).toFixed(2);
+                        input_kg.value = (valNum*1e-6).toFixed(2);
+                        input_lb.value = (valNum*2.205e-6).toFixed(2);
+                        input_oz.value = (valNum*3.527e-5).toFixed(2);
+                    }
+                    if (source=="input_lb") {
+                        input_g.value = (valNum*453.592).toFixed();
+                        input_kg.value = (valNum*0.454).toFixed(2);
+                        input_mg.value = (valNum*4.536e5).toFixed();
+                        input_oz.value = (valNum*16).toFixed(2);
+                    }
+                    if (source=="input_oz") {
+                        input_g.value = (valNum*28.35).toFixed();
+                        input_kg.value = (valNum*0.028).toFixed(2);
+                        input_mg.value = (valNum*2.835e4).toFixed();
+                        input_lb.value = (valNum*0.063).toFixed(2);
+                    }
+                    if (source=="input_celsius") {
+                        input_fahrenheit.value = (valNum*(9/5)+32).toFixed();
+                    }
+                    if (source=="input_fahrenheit") {
+                        input_celsius.value = ((valNum-32)*(5/9)).toFixed();
+                    }
+                }
+
+                function tog_conv(evt, type) {
+                    var i, tabcontent, tablinks;
+
+                    tabcontent = document.getElementsByClassName("tabcontent");
+                    for (i=0; i<tabcontent.length; i++) {
+                        tabcontent[i].style.display = "none";
+                    }
+
+                    tablinks = document.getElementsByClassName("tablinks");
+                    for (i=0; i<tablinks.length; i++) {
+                        tablinks[i].className = tablinks[i].className.replace(" active", "");
+                    }
+                    document.getElementById(type).style.display = "block";
+                }
+
+                function start() {
+                    countdown_timer = setInterval('timer()', 1000);
+                    document.getElementById("message").innerHTML = "";
+                    h = parseInt(document.getElementById("hours").value, 0);
+                    m = parseInt(document.getElementById("minutes").value, 0);
+                    s = parseInt(document.getElementById("seconds").value, 0);
+                    current = ((h * 3600) + (m * 60) + s);  //the current time left in seconds
+                }
+
+                function timer() {
+                    if (current > 0) {
+                        --current;
+                        var date = new Date(current * 1000);    //convert to milliseconds
+                        var hh = date.getUTCHours();
+                        var mm = date.getUTCMinutes();
+                        var ss = date.getSeconds();
+
+                        if (hh < 10) {hh = "0"+hh;}
+                        if (mm < 10) {mm = "0"+mm;}
+                        if (ss < 10) {ss = "0"+ss;}
+
+                        document.getElementById("display").innerHTML = hh+":"+mm+":"+ss;
+                    } else {
+                        clearInterval(countdown_timer);
+                        document.getElementById("message").innerHTML = "Done";
+                    }
+                }
+
+                tog_conv(event, 'Volume');
+            </script>
+        </div>
+        </div>
+
+        <div class="third">
+            <h2>Common Conversions</h2>
+            <div class="white padded rounded">
+                <table class="center fill">
+                    <thead>
+                    <tr><th>Ingredient</th><th>Grams</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>1 cup all-purpose flour</td><td>142</td></tr>
+                    <tr><td>1 cup cake flour</td><td>113</td></tr>
+                    <tr><td>1 cup whole wheat flour</td><td>156</td></tr>
+                    <tr><td>1 cup granulated (white) sugar</td><td>198</td></tr>
+                    <tr><td>1 cup packed brown sugar</td><td>198</td></tr>
+                    <tr><td>1 cup confectioner's sugar</td><td>113</td></tr>
+                    <tr><td>1 cup cocoa powder</td><td>85</td></tr>
+                    <tr><td>Butter</td><td></td></tr>
+                    <tr><td>1/4 cup</td><td>57</td></tr>
+                    <tr><td>1/2 cup</td><td>113</td></tr>
+                    <tr><td>1 cup</td><td>227</td></tr>
+                  </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="third">
+            <h2>Tips and Techniques</h2>
+            <div class="white padded rounded">
+                <div class="accordion">
+                    <input type="checkbox" id="x01">
+                    <label for="x01"><a>Measuring Flour</a></label>
+                    <div>
+                        <div class="padded white">
+                            <ol>
+                                <li>Stir to loosen the flour (Do not shake or pack down the flour)</li>
+                                <li>Keep spooning the flour into the cup until it mounds well above the top of the measuring cup</li>
+                                <li>Using dinner knife, turn it to the non-serrated side</li>
+                                <li>Take the knife and level off the flour by sweeping the knife over the top of the cup to remove the excess flour</li>
+                                <li>Keep on leveling off the top until you have a level surface</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion">
+                    <input type="checkbox" id="x02">
+                    <label for="x02"><a>Beating egg whites</a></label>
+                    <div>
+                        <div class="padded white">
+                            <ol>
+                                <li>Make sure bowl and beaters are clean and grease-free</li>
+                                <li>Use a stainless steel, ceramic, or glass bowl (Do not use plastic)</li>
+                                <li>Let eggs reach room temperature if possible</li>
+                                <li>Beat eggs</li>
+                                <li>As you continue beating the liquid will become opaque as it forms many smaller bubbles</li>
+                                <li>If a point forms and falls over immediately, egg whites are at a soft peak</li>
+                                <li>From there, 20-25 more strokes will bring to medium peak</li>
+                                <li>An additional 15-20 strokes will bring to stiff peaks</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion">
+                    <input type="checkbox" id="x03">
+                    <label for="x03"><a>Creaming</a></label>
+                    <div>
+                        <div class="padded white">
+                            <p>Creaming is where sugar and fat are beaten to form and capture air bubbles</p>
+                            <ol>
+                                <li>When first beating sugar and fat together, mixture is thick and lumpy</li>
+                                <li>Continue beating until mixture becomes creamier in texture, more uniform, and lighter in color as air is beaten in</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion">
+                    <input type="checkbox" id="x04">
+                    <label for="x04"><a>Doneness</a></label>
+                    <div>
+                        <div class="padded white">
+                            <ol>
+                                <li>Open oven door, insert edge of a turner or spatula and gently lift cookie</li>
+                                <li>If cookie stays flat across bottom and doesn't bend or break in middle it's ready</li>
+                                <li>For bar cookies, they will pull away from the edge of the pan slightly</li>
+                                <li>For batter cookies, they will golden brown at the edges</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion">
+                    <input type="checkbox" id="x05">
+                    <label for="x05"><a>Toasting Nuts</a></label>
+                    <div>
+                        <div class="padded white">
+                            <p>Nuts will take on a deeper color when toasted and enhances the flavor</p>
+                            <ol>
+                                <li>Heat oven to a low to moderate 300-325F</li>
+                                <li>Make sure nuts are in  a shallow container in a single layer</li>
+                                <li>Nuts are down when you smell their aroma and they are golden brown</li>
+                                <li>Remove nuts from oven when their color is a shade lighter than you want</li>
+                                <li>Remove them from the oven and transfer to cool surface immediately to prevent carry-over cooking</li>
+                                <li>If toasting sweetened coconut, remove from oven and stir it on the baking pan every 5 minutes</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="white padded rounded" style="margin-top:1em;">
+            <div class="quarter">
+            <label>Timer</label>
+                <br>
+                H:<input class="quarter" id="hours" type="number" value="0"/>
+                M:<input class="quarter" id="minutes" type="number" value="0"/>
+                S:<input class="quarter" id="seconds" type="number" value="0"/>
+
+                <button id="Start" class="center" style="margin-top:1em; max-width:100px" onclick="start();">Start</button>
+            </div>
+
+            <div class="center" id="display"></div>
+            <div class="center" style="margin-top:1em;" id="message"></div>
+        </div>
+      
+    </div>
+    
+  </div>
+
+</div>
+
+<script src="{{=URL('static', 'js/default_baking_tips.js')}}"></script>

@@ -1,0 +1,45 @@
+{{extend 'layout.html'}}
+
+{{block head}}
+
+<script src="{{=URL('static', 'js/vue.js')}}"></script>
+<script>
+  // Define your URLs here.
+  var check_dupe_url = "{{=URL('api_add_ingr', 'check_duplicate')}}";
+</script>
+
+
+{{end}}
+
+<div class="main_content">
+
+  <div id="vue-div" class="display:none">
+    <!-- Your code goes here.  Remember to call $("#vue-div").show() once you get the data for the first time. -->
+    
+    <div class="container padded">
+      
+      <h3>New Ingredient</h3>
+      <p>Duplicate ingredients will not be added to databse.</p><br/>
+      Ingredient Name: <input id="input_ingr" v-model="item" type="text" placeholder="[Input] e.g., water, butter, yeast."/>
+      <button v-on:click="add_ingr" style="margin-top: .5em;">Add</button>
+      
+      <!-- Messages for user -->
+      <div v-if="empty">
+        <h5>Please input an ingredient above.</h5>
+      </div>
+      
+      <div v-if="duplicate">
+        <h5>Ingredient already in database.</h5>
+      </div>
+      
+      <div v-if="added_ingr">
+        <h5>Successfully added ingredient: ${last_ingr}!</h5>
+       </div>
+      
+    </div>
+    
+  </div>
+
+</div>
+
+<script src="{{=URL('static', 'js/default_add_ingr.js')}}"></script>

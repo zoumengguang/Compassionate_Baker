@@ -1,0 +1,277 @@
+{{extend 'layout.html'}}
+
+{{block head}}
+
+<script src="{{=URL('static', 'js/vue.js')}}"></script>
+<script>
+  // Define your URLs here.
+  var get_ingr_url = "{{=URL('api_add_recipe', 'get_ingredients')}}";
+  var commitUserInvURL = "{{=URL('api', 'commit_user_inv', user_signature=True)}}";
+  var get_user_inv_URL = "{{=URL('api', 'get_user_inv', user_signature=True)}}";
+  var get_recipes_URL = "{{=URL('api', 'get_recipes', user_signature=True)}}";
+  var get_prevrecipes_URL = "{{=URL('api', 'get_prevrecipes', user_signature=True)}}";
+  var newday_recipesURL = "{{=URL('api', 'newday_recipes', user_signature=True)}}";
+</script>
+
+{{end}}
+
+<div class="main_content">
+
+  <div id="vue-div" class="display:none">
+    <!-- Your code goes here.  Remember to call $("#vue-div").show() once you get the data for the first time. -->
+    
+    <div class="container" v-if="!recipe_is_open">
+      {{if auth.user:}}
+      <div class="prev_yield quarter">
+        <h6>Previous Day's Yields</h6>
+        <div class="yester_div" v-for="recipe in prevrecipes">
+          <div class="recipes">
+            ${recipe.recipe.name}
+            <button class="btn rounded" style="float: right; transform: translate(8px, -4px);" v-on:click="open_recipe_full(recipe.recipe)"> More</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="recipe_div quarter">
+        <h6>Today's Recipes</h6>
+        <button class="btn" v-on:click="newday_recipes">
+          <i class="fa fa-sun-o"></i> New Day
+        </button>
+        <div class="today_div" v-for="recipe in recipes">
+          <div class="recipes">
+            ${recipe.recipe.name}
+            <button class="btn rounded" style="float: right; transform: translate(8px, -4px);" v-on:click="open_recipe_full(recipe.recipe)"> More</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="user_inv_div quarter">
+        <h6>User Inventory</h6>
+        <div class="user_div">
+          <div class="twothirds tags dismissible">
+            <span v-for="ingr in inventory" v-on:click="remove_ingr(ingr._idx)">
+              ${ingr.name}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="all_inv_div quarter">
+        <h6>All Ingredients</h6>
+        <div class="ingre_div">
+          <!-- Search -->
+          <input style="margin-bottom:1em;" v-model="ingr_search" class="padded" type="string" placeholder="Search Ingredient"/>
+          <!-- Progress bar for search -->
+          <div v-if="searching_ingr" class="progress fill"><div class="indeterminate"></div></div>
+          <!-- Ingredient list -->
+          <table class="fill" id="ingr_selector">
+            <tbody v-for="ingr in ingr_search_list">
+                <tr v-on:click="add_ingr(ingr._idx)" class="center">
+                  <td>${ingr.name}</td>
+                </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {{else:}}
+      <div class="welcome" style="margin-right:20px;">
+        <div class="title" style="background:url(../static/images/welcome_bread.jpg) no-repeat center;padding-top:5px;padding-bottom:12em;">
+          <div style="margin-left:5%; margin-right:5%;">
+            <h1 class="glass padded center">The Compassionate Baker</h1>
+          </div>
+          <div style="margin-left:25%; margin-right:25%; margin-top:20em; float:center;">
+            <h5 class="glass padded center">Manage your kitchen with the Compassionate Baker
+              <br>Login to get started!</h5>
+          </div>
+        </div>
+      </div>
+        
+      {{pass}}
+    </div>
+
+    {{if auth.user:}}
+    <div class="container recipe_full_div" v-if="recipe_is_open && cur_recipe_id!=null">
+      <button class="btn"  v-on:click="back_to_main">
+          <i class="fa fa-arrow-left"></i> Go Back
+      </button>
+      <div>
+        <h5>${cur_recipe_id.name}</h5>
+        <!-- Public/Private buttons -->
+        <div v-if="cur_recipe_id.is_public" style="padding-bottom:.5em;">
+          <a class="btn rounded">Public</a>
+        </div>
+        <div v-else style="padding-bottom:.5em;">
+          <a class="btn rounded">Private</a>
+        </div>
+      </div>
+      <!-- Name -->
+      <div class="container" style="margin-bottom:.5em;">
+        <label class="quarter" style="text-align:right;">Name:</label>
+        <div class="twothirds">
+          <p>${cur_recipe_id.name}</p>
+        </div>
+      </div>
+      <!-- Description -->
+      <div class="container" style="margin-bottom:.5em;">
+        <label class="quarter" style="text-align:right;">Description:</label>
+        <div class="twothirds">
+         <p>${cur_recipe_id.description}</p>
+        </div>
+      </div>
+      <!-- Ingredients -->
+      <div class="container" style="margin-bottom:.5em;">
+        <label class="quarter" style="text-align:right;">Ingredients:</label>
+        <div class="container twothirds">
+          <div v-for="ingr in cur_recipe_id.ingredients" class="container half" style="border-style:solid;border-width:.1px;border-color:silver;margin:.1em;padding:.5em;width:20em;">
+            <div class="third" style="min-width:7em;"><p>${ingr.quantity}</p></div>
+            <div class="third" style="min-width:6em;"><select v-on:change="conversion(ingr._idx)" v-model="ingr.unit" style="-webkit-appearance: menulist; -moz-appearance: none; appearance: menulist;">
+              <option id="input_grams" value="g">g</option>
+              <option id="input_kg" value="kg">kg</option>
+              <option id="input_mg" value="mg">mg</option>
+              <option id="input_lb" value="l">lb</option>
+              <option id="input_oz" value="oz">oz</option>
+              <option value="fl oz">fl oz</option>
+              <option id="input_ml" value="ml">ml</option>
+              <option id="input_Tsp" value="tsp">tsp</option>
+              <option id="input_Tbsp" value="tbsp">tbsp</option>
+              <option id="input_cup" value="cup">cups</option>
+              <option id="input_pint_dry" value="pintd">pint (dry)</option>
+              <option id="input_int_liq" value="pintl">pint (liquid)</option>
+            </select></div>
+            <p>${ingr.ingr.name}</p>
+          </div>
+        </div>
+      </div>
+      <!-- Steps for recipe -->
+      <div v-for="step in cur_recipe_id.steps" class="container" style="margin-bottom:.5em;">
+        <label class="quarter" style="text-align:right;">Step ${step._idx+1}:</label>
+        <div class="twothirds" style="padding:.5em;border-style:solid;border-width:.1px;border-color:silver;">
+          <!-- Label for recipe -->
+          <div class="container" style="margin-bottom:.5em;">
+            <div class="third" style="min-width:7em;"><p>${step.time} ${step.unit}</p></div>
+              <div v-if="step.active" style="padding-bottom:.5em;">
+                <a class="btn rounded">Active</a>
+              </div>
+              <div v-else style="padding-bottom:.5em;">
+                <a class="btn rounded">Waiting</a>
+              </div>
+          </div>
+          <!-- Instructions for recipe -->
+          <p>${step.instruction}</p>
+        </div>
+      </div>
+    </div>
+    {{pass}}
+
+  </div>
+</div>
+
+<script src="{{=URL('static', 'js/default_index.js')}}"></script>
+<script>
+  var fl = 0;
+  function lengthConverter(source,s_unit,n_unit)
+    {
+        valNum = parseFloat(valNum);
+        var input_ml = document.getElementById("input_ml");
+        var input_pint_dry = document.getElementById("input_pint_dry");
+        var input_pint_liq = document.getElementById("input_pint_liq");
+        var input_cup = document.getElementById("input_cup");
+        var input_fl_oz = document.getElementById("input_fl_oz");
+        var input_Tbsp = document.getElementById("input_Tbsp");
+        var input_Tsp = document.getElementById("input_Tsp");
+        var input_g = document.getElementById("input_g");
+        var input_kg = document.getElementById("input_kg");
+        var input_mg = document.getElementById("input_mg");
+        var input_lb = document.getElementById("input_lb");
+        var input_oz = document.getElementById("input_oz");
+        var input_celsius = document.getElementById("input_celsius");
+        var input_fahrenheit = document.getElementById("input_fahrenheit");
+        if (s_unit=="ml"){
+            input_pint_dry.value = (valNum*1.82e-3).toFixed(2);
+            input_pint_liq.value = (valNum*2.11e-3).toFixed(2);
+            input_cup.value = (valNum*4.23e-3).toFixed(2);
+            fl = (valNum*0.0352).toFixed(2);
+            input_Tbsp.value = (valNum*0.068).toFixed(1);
+            input_Tsp.value = (valNum*0.203).toFixed();
+        }
+        if (source=="pintd"){
+            input_ml.value = (valNum*550.61).toFixed(2);
+            input_pint_liq.value = (valNum*1.16).toFixed(2);
+            input_cup.value = (valNum*2.327).toFixed(2);
+            input_fl_oz.value = (valNum*19.379).toFixed(2);
+            input_Tbsp.value = (valNum*36.707).toFixed(1);
+            input_Tsp.value = (valNum*110.122).toFixed();
+        }
+        if (source=="pintl"){
+            input_ml.value = (valNum*1.25).toFixed(2);
+            input_pint_dry.value = (valNum*0.86).toFixed(2);
+            input_cup.value = (valNum*0.00525).toFixed(2);
+            input_fl_oz.value = (valNum*0.04225).toFixed(2);
+            input_Tbsp.value = (valNum*0.0845).toFixed(1);
+            input_Tsp.value = (valNum*0.25).toFixed()
+        }
+        if (source=="cup"){
+            input_ml.value = (valNum*236.588).toFixed(2);
+            input_pint_dry.value = (valNum*0.43).toFixed(2);
+            input_pint_liq.value = (valNum*0.5).toFixed(2);
+            input_fl_oz.value = (valNum*8.327).toFixed(2);
+            input_Tbsp.value = (valNum*15.773).toFixed(1);
+            input_Tsp.value = (valNum*47.318).toFixed();
+        }
+        if (source=="fl oz"){
+            input_ml.value = (valNum*29.574).toFixed(2);
+            input_pint_dry.value = (valNum*0.05).toFixed(2);
+            input_pint_liq.value = (valNum*0.06).toFixed(2);
+            input_cup.value = (valNum*0.125).toFixed(2);
+            input_Tbsp.value = (valNum*1.972).toFixed(1);
+            input_Tsp.value = (valNum*5.915).toFixed();
+        }
+        if (source=="tbsp"){
+            input_ml.value = (valNum*15).toFixed(2);
+            input_pint_dry.value = (valNum*0.027).toFixed(2);
+            input_pint_liq.value = (valNum*0.031).toFixed(2);
+            input_cup.value = (valNum*0.063).toFixed(2);
+            input_fl_oz.value = (valNum*0.528).toFixed(1);
+            input_Tsp.value = (valNum*3).toFixed();
+        }
+        if (source=="tsp"){
+            input_ml.value = (valNum*5).toFixed(2);
+            input_pint_dry.value = (valNum*0.009).toFixed(2);
+            input_pint_liq.value = (valNum*0.01)
+            input_cup.value = (valNum*0.021).toFixed(2);
+            input_fl_oz.value = (valNum*0.169).toFixed(2);
+            input_Tbsp.value = (valNum*0.338).toFixed(1);
+        }
+        if (source=="=g") {
+            input_kg.value = (valNum*0.001).toFixed(2);
+            input_mg.value = (valNum*1000).toFixed();
+            input_lb.value = (valNum*0.002).toFixed(2);
+            input_oz.value = (valNum*0.035).toFixed(2);
+        }
+        if (source=="=kg") {
+            input_g.value = (valNum*1000).toFixed();
+            input_mg.value = (valNum*1e6).toFixed();
+            input_lb.value = (valNum*2.205).toFixed(2);
+            input_oz.value = (valNum*35.274).toFixed(2);
+        }
+        if (source=="mg") {
+            input_g.value = (valNum*0.001).toFixed(2);
+            input_kg.value = (valNum*1e-6).toFixed(2);
+            input_lb.value = (valNum*2.205e-6).toFixed(2);
+            input_oz.value = (valNum*3.527e-5).toFixed(2);
+        }
+        if (source=="l") {
+            input_g.value = (valNum*453.592).toFixed();
+            input_kg.value = (valNum*0.454).toFixed(2);
+            input_mg.value = (valNum*4.536e5).toFixed();
+            input_oz.value = (valNum*16).toFixed(2);
+        }
+        if (source=="oz") {
+            input_g.value = (valNum*28.35).toFixed();
+            input_kg.value = (valNum*0.028).toFixed(2);
+            input_mg.value = (valNum*2.835e4).toFixed();
+            input_lb.value = (valNum*0.063).toFixed(2);
+        }
+    }
+</script>

@@ -1,0 +1,77 @@
+{{extend 'layout.html'}}
+
+{{block head}}
+
+<script src="{{=URL('static', 'js/vue.js')}}"></script>
+<script>
+  // Define your URLs here.
+  var get_recipe_url = "{{=URL('api_search_recipe', 'get_recipe',)}}";
+  var retrieve_today_url = "{{=URL('api_search_recipe', 'retrieve_today', user_signature=True)}}";
+  var add_recipe_url = "{{=URL('api_search_recipe', 'add_recipe', user_signature=True)}}";
+  var get_user_inv_URL = "{{=URL('api', 'get_user_inv', user_signature=True)}}";
+</script>
+
+
+{{end}}
+
+<div class="main_content">
+
+  <div id="vue-div" class="display:none">
+    <!-- Title -->
+    <p style="font-size: 3em;text-align:center;">Search Recipe</p>
+    <div class="container padded">
+      <!-- recipe name input area -->
+      <div class="recipe_input center">
+        <!-- Search -->
+        <input style="margin-bottom:1em;max-width:50em;font-size:1em;" v-model="recipe_search" class="padded center" type="string" placeholder="Search Recipe"/>
+        <!-- Progress bar for search -->
+        <div v-if="searching_recipe" class="progress fill"><div class="indeterminate"></div></div>
+      </div>
+      <div class="threequarters">
+      <table style="margin-top:1em;margin-left:auto;margin-right:auto;min-width:10em;">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Name</th>
+          </tr>
+        </thead>
+        <tbody v-for="recipe in recipe_search_list">
+          <tr v-if="check_recipe(recipe.id)" class="center">
+            <td><a v-on:click="" class="btn rounded red" data-tooltip="Already added to today's recipes" style="margin-top:.1em;">
+              <i class="fa fa-plus"></i></a>
+            </td>
+            <td>${recipe.name}</td>
+          </tr>
+          <tr v-else class="center">
+            <td><a v-on:click="add_recipe(recipe.id)" class="btn rounded" data-tooltip="Add to today's recipes" style="margin-top:.1em;">
+              <i class="fa fa-plus"></i></a>
+            </td>
+            <td>${recipe.name}</td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
+      <!-- Ingredient list -->
+      <div class="user_inv_div quarter">
+        <div v-if="!invent_filter">
+        <a class="btn rounded"  v-on:click="toggle_invent"><i class="fa fa-gear"></i> Filter by Current Inventory</a>
+        </div>
+        <div v-else>
+        <a class="btn rounded"  v-on:click="toggle_invent"><i class="fa fa-gear"></i> Revert Inventory Filter</a>
+        </div>
+        <h6>User Inventory</h6>
+        <div class="user_div">
+          <div class="twothirds tags">
+            <span v-for="ingr in inventory">
+              ${ingr.name}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+  </div>
+
+</div>
+
+<script src="{{=URL('static', 'js/default_search_recipe.js')}}"></script>

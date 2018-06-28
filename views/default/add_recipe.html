@@ -1,0 +1,144 @@
+{{extend 'layout.html'}}
+
+{{block head}}
+
+<script src="{{=URL('static', 'js/vue.js')}}"></script>
+<script>
+  // Define your URLs here.
+  var get_ingr_url = "{{=URL('api_add_recipe', 'get_ingredients')}}";
+  var add_recipe_url = "{{=URL('api_add_recipe', 'add_recipe', user_signature=True)}}";
+</script>
+
+
+{{end}}
+
+<div class="main_content">
+
+  <div id="vue-div" class="display:none">
+    <!-- Title -->
+    <p style="font-size: 3em;text-align:center;">New Recipe</p>
+    <div class="container padded">
+      <!-- name/description/step input area -->
+      <div class="recipe_input threequarters" style="padding-right:4em;">
+        <!-- Header for recipe input -->
+        <!-- Submit button -->
+        <div v-if="form_complete">
+          <input type="submit" v-on:click="add_recipe">
+        </div>
+        <div v-else>
+          <p>Please complete form</p>
+        </div>
+        <div>
+          <h5>Recipe</h5>
+          <!-- Public/Private buttons -->
+          <div v-if="is_public" style="padding-bottom:.5em;">
+            <a class="btn red rounded"  v-on:click="toggle_public"><i class="fa fa-times-circle"></i> Private</a>
+            <a class="btn rounded"><i class="fa fa-check-circle"></i> Public</a>
+          </div>
+          <div v-else style="padding-bottom:.5em;">
+            <a class="btn rounded"><i class="fa fa-check-circle"></i> Private</a>
+            <a class="btn red rounded" v-on:click="toggle_public"><i class="fa fa-times-circle"></i> Public</a>
+          </div>
+        </div>
+        <!-- Form for recipe -->
+        <!-- Public/Private -->
+        <div class="container" style="margin-bottom:.5em;">
+          <label class="quarter" style="text-align:right;">Public Recipe (?)</label>
+          <div class="twothirds">
+            <input type="checkbox" v-model="is_public">
+          </div>
+        </div>
+        <!-- Name -->
+        <div class="container" style="margin-bottom:.5em;">
+          <label class="quarter" style="text-align:right;">Name:</label>
+          <div class="twothirds">
+            <input v-model="recipe_name" type="text" class="fill" placeholder="Name">
+          </div>
+        </div>
+        <!-- Description -->
+        <div class="container" style="margin-bottom:.5em;">
+          <label class="quarter" style="text-align:right;">Description:</label>
+          <div class="twothirds">
+            <textarea v-model="recipe_description" class="fill" placeholder="Description..."></textarea>
+          </div>
+        </div>
+        <!-- Ingredients -->
+        <div class="container" style="margin-bottom:.5em;">
+          <label class="quarter" style="text-align:right;">Ingredients:</label>
+          <div class="container twothirds">
+            <div v-for="ingr in recipe_ingr" class="container half" style="border-style:solid;border-width:.1px;border-color:silver;margin:.1em;padding:.5em;width:20em;">
+              <div class="third" style="min-width:7em;"><input v-model="ingr.quantity" type="number" placeholder="Amount"></div>
+              <div class="third" style="min-width:6em;"><select v-model="ingr.unit" style="-webkit-appearance: menulist; -moz-appearance: none; appearance: menulist;">
+                <option value="g">g</option>
+                <option value="kg">kg</option>
+                <option value="mg">mg</option>
+                <option value="l">lb</option>
+                <option value="oz">oz</option>
+                <option value="fl oz">fl oz</option>
+                <option value="ml">ml</option>
+                <option value="tsp">tsp</option>
+                <option value="tbsp">tbsp</option>
+                <option value="cup">cups</option>
+                <option value="pintd">pint (dry)</option>
+                <option value="pintl">pint (liquid)</option>
+              </select></div>
+              <a class="btn rounded" v-on:click="remove_ingr(ingr.ingr._idx)">${ingr.ingr.name} <i class="fa fa-times"></i></a>
+            </div>
+          </div>
+        </div>
+        <!-- Steps for recipe -->
+        <div v-for="step in recipe_steps" class="container" style="margin-bottom:.5em;">
+          <label class="quarter" style="text-align:right;">Step ${step._idx+1}:</label>
+          <div class="twothirds" style="padding:.5em;border-style:solid;border-width:.1px;border-color:silver;">
+            <!-- Label for recipe -->
+            <div class="container" style="margin-bottom:.5em;">
+              <div class="third" style="min-width:7em;"><input v-model="step.time" type="number" placeholder="Amount"></div>
+              <div class="third" style="min-width:6em;"><select v-model="step.unit" style="-webkit-appearance: menulist; -moz-appearance: none; appearance: menulist;">
+                <option value="sec">sec</option>
+                <option value="min">min</option>
+                <option value="hr">hr</option>
+                <option value="day">day</option>
+              </select></div>
+              <div class="third" style="min-width:6em;"><select v-model="step.active" class="fill" style="-webkit-appearance: menulist; -moz-appearance: none; appearance: menulist;">
+                <option v-bind:value="true">Active</option>
+                <option v-bind:value="false">Waiting</option>
+              </select></div>
+            </div>
+            <!-- Instructions for recipe -->
+            <textarea v-model="step.instruction" type="text" class="fill" v-bind:placeholder="'Step '+(step._idx+1)+' instructions...'" style="margin-bottom:.5em;"></textarea>
+            <a class="btn red right" v-on:click="remove_step(step._idx)">Remove Step ${(step._idx+1)}</a>
+          </div>
+        </div>
+        <!-- Add step button -->
+        <div class="container" style="margin-bottom:.5em;">
+          <label class="quarter"></label>
+          <div class="twothirds">
+            <a class="btn" v-on:click="add_step"><i class="fa fa-plus"></i> Add Step</a>
+          </div>
+        </div>
+      </div>
+      
+      <!-- ingredient input area -->
+      <div class="ingredient_input quarter">
+        <h5>Add Ingredient</h5>
+        <!-- Search -->
+        <input style="margin-bottom:1em;" v-model="ingr_search" class="padded" type="string" placeholder="Search Ingredient"/>
+        <!-- Progress bar for search -->
+        <div v-if="searching_ingr" class="progress fill"><div class="indeterminate"></div></div>
+        <!-- Ingredient list -->
+        <table class="fill" id="ingr_selector">
+          <tbody v-for="ingr in ingr_search_list">
+              <tr v-on:click="add_ingr(ingr._idx)" class="center">
+                <td>${ingr.name}</td>
+              </tr>
+          </tbody>
+        </table>
+      </div>
+      
+    </div>
+    
+  </div>
+
+</div>
+
+<script src="{{=URL('static', 'js/default_add_recipe.js')}}"></script>
