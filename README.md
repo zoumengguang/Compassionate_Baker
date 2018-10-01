@@ -3,6 +3,8 @@
 A kitchen management assistant application developed in Web2py and Vue.js in collaboration
 with Curtis Lee and Winston Wu. 
 
+![Home](https://i.imgur.com/gmuSbCF.jpg)
+
 Stack
 ---
 - Vue.js
